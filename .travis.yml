@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t thomasaedk/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run thomaeaedk/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t thomasaedk/multi-client ./client
+  - docker build -t thomasaedk/multi-nginx ./nginx
+  - docker build -t thomasaedk/multi-server ./server
+  - docker build -t thomasaedk/multi-worker ./worker
+  # Log into the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push thomasaedk/multi-client
+  - docker push thomasaedk/multi-nginx
+  - docker push thomasaedk/multi-server
+  - docker push thomasaedk/multi-worker
